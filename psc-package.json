@@ -1,0 +1,12 @@
+{
+  "name": "purescript-chahan",
+  "set": "pho",
+  "source": "https://github.com/justinwoo/package-sets.git",
+  "depends": [
+    "test-unit",
+    "psci-support",
+    "typelevel-prelude",
+    "generics-rep",
+    "prelude"
+  ]
+}
