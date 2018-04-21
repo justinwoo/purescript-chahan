@@ -3,11 +3,15 @@ module Test.Main where
 import Prelude
 
 import Chahan (class SumToList, class ToProductList, PLProxy(PLProxy), Product1, ProductN, SLProxy(SLProxy), Sum1, SumN, kind ProductList1, kind SumList1)
+import Control.Monad.Eff (Eff)
+import Control.Monad.Eff.AVar (AVAR)
+import Control.Monad.Eff.Console (CONSOLE)
 import Data.Foldable (intercalate)
 import Data.Generic.Rep (class Generic, Argument)
 import Data.List.NonEmpty (NonEmptyList)
 import Test.Unit (suite, test)
 import Test.Unit.Assert as Assert
+import Test.Unit.Console (TESTOUTPUT)
 import Test.Unit.Main (runTest)
 import Type.Prelude (class IsSymbol, Proxy(..), SProxy(SProxy), reflectSymbol)
 
@@ -60,30 +64,44 @@ data Fruit
   | Cherry
 derive instance genericFruit :: Generic Fruit _
 
-availableFruits
-  :: forall rep list
-   . Generic Fruit rep
-  => SumToList rep list
-  => SumNames list
-  => NonEmptyList String
-availableFruits = sumNames (SLProxy :: SLProxy list)
+availableFruits :: NonEmptyList String
+availableFruits = availableFruits'
+  where
+    availableFruits'
+      :: forall rep list
+      . Generic Fruit rep
+      => SumToList rep list
+      => SumNames list
+      => NonEmptyList String
+    availableFruits' = sumNames (SLProxy :: SLProxy list)
 
 data Thing
   = Thing Int String Int
 derive instance genericThing :: Generic Thing _
 
-thingNames
-  :: forall rep name list
-   . Generic Thing rep
-  => ToProductList rep name list
-  => IsSymbol name
-  => ProductNames list
-  => NonEmptyList String
-thingNames =
-  head <> productNames (PLProxy :: PLProxy list)
+thingNames :: NonEmptyList String
+thingNames = thingNames'
   where
-    head = pure $ reflectSymbol (SProxy :: SProxy name)
+    thingNames'
+      :: forall rep name list
+      . Generic Thing rep
+      => ToProductList rep name list
+      => IsSymbol name
+      => ProductNames list
+      => NonEmptyList String
+    thingNames' =
+      head <> productNames (PLProxy :: PLProxy list)
+      where
+        head = pure $ reflectSymbol (SProxy :: SProxy name)
 
+main :: forall e.
+  Eff
+    ( console :: CONSOLE
+    , testOutput :: TESTOUTPUT
+    , avar :: AVAR
+    | e
+    )
+    Unit
 main = runTest do
   suite "Chahan" do
 
